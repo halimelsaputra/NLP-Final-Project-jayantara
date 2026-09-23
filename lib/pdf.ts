@@ -1,10 +1,8 @@
-// Helper untuk memuat pdf.js dengan konfigurasi worker yang benar.
-// Worker di-bundle otomatis oleh Next.js melalui new URL(..., import.meta.url).
+// Helper untuk memuat pdf.js dengan konfigurasi worker CDN agar compatible dengan Next.js bundler
 export async function loadPdfjs() {
   const pdfjs = await import("pdfjs-dist");
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.min.mjs",
-    import.meta.url,
-  ).toString();
+  if (!pdfjs.GlobalWorkerOptions.workerSrc) {
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version || "4.4.168"}/build/pdf.worker.min.mjs`;
+  }
   return pdfjs;
 }

@@ -13,11 +13,9 @@ const GithubIcon = ({ className }: { className?: string }) => (
 );
 
 const navLinks = [
-  "サイトマップ",
-  "プライバシーポリシー",
-  "サイトご利用規約",
-  "お問い合わせ",
-  " 公式ショップ",
+  "Beranda",
+  "Tentang",
+  "Koreksi",
 ];
 
 const techPills = [

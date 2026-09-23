@@ -11,7 +11,6 @@ interface SiteNavbarProps {
 const navItems = [
   { name: "Beranda", link: "/", hash: "" },
   { name: "Tentang", link: "/#tentang", hash: "tentang" },
-  { name: "Tim", link: "/#tim", hash: "tim" },
 ];
 
 export default function SiteNavbar({ back = false }: SiteNavbarProps) {
