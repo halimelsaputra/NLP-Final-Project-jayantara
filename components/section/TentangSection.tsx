@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   MouseEvent as ReactMouseEvent,
   TouchEvent as ReactTouchEvent,
@@ -104,17 +104,27 @@ export default function TentangSection() {
   const [inset, setInset] = useState(50);
   const [dragging, setDragging] = useState(false);
 
-  // Batas geser slider: tiap sisi maksimal terungkap 75%,
-  // jadi pembatas hanya bisa bergerak di rentang 25%-75%.
-  const MIN_INSET = 20;
-  const MAX_INSET = 80;
+  // Pada mobile: default slider di sebelah kanan mentok (membuka panel hitam Web Interface)
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setInset(86);
+    }
+  }, []);
+
+  const getLimits = () => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      return { min: 14, max: 86 };
+    }
+    return { min: 20, max: 80 };
+  };
 
   const moveTo = (clientX: number) => {
     const el = containerRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
     const percentage = ((clientX - rect.left) / rect.width) * 100;
-    setInset(Math.min(MAX_INSET, Math.max(MIN_INSET, percentage)));
+    const { min, max } = getLimits();
+    setInset(Math.min(max, Math.max(min, percentage)));
   };
 
   const handleMove = (e: ReactMouseEvent | ReactTouchEvent) => {
@@ -130,9 +140,6 @@ export default function TentangSection() {
   const dividerStyle = { left: inset + "%" };
   const clipStyle = { clipPath: "inset(0 0 0 " + inset + "%)" };
 
-  // Kecepatan auto-scroll tiap kolom dalam PIKSEL per detik.
-  // Dipakai SAMA di kedua sisi (hitam & putih) -> kecepatan visual seragam,
-  // tidak terpengaruh tinggi/panjang teks kartu.
   const COLUMN_SPEEDS = [35, 35, 35];
 
   return (
