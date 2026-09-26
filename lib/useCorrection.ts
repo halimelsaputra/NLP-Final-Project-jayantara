@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { getInputText, getInputFile, getInputFileMeta } from "@/lib/session";
 import { wordDiff, hasChanges } from "@/lib/diff";
 import { limitForDemo } from "@/lib/chunk";
+import { correctClientText } from "@/lib/clientCorrection";
 import type { CorrectionResponse, DiffToken, StoredFileMeta } from "@/lib/types";
 
 export type CorrectionState =
@@ -21,16 +21,14 @@ export type CorrectionState =
     };
 
 export function useCorrection() {
-  const router = useRouter();
   const [state, setState] = useState<CorrectionState>({ phase: "loading" });
   const [file, setFile] = useState<File | null>(null);
   const [meta, setMeta] = useState<StoredFileMeta | null>(null);
 
   useEffect(() => {
-    const text = getInputText();
+    let text = getInputText();
     if (!text || !text.trim()) {
-      router.replace("/");
-      return;
+      text = "kemarin gw nungguin kamu dirumah bgt tp gaada kabar, jadinya sy pergi dikampus.";
     }
     setFile(getInputFile());
     setMeta(getInputFileMeta());
@@ -47,16 +45,25 @@ export function useCorrection() {
 
       for (let i = 0; i < usable.length; i++) {
         setState({ phase: "loading", progress: `Mengoreksi ${i + 1}/${usable.length} bagian…` });
-        const res = await fetch("/api/correct", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: usable[i] }),
-        });
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error ?? `Gagal mengoreksi (status ${res.status}).`);
+        
+        let data: CorrectionResponse;
+        try {
+          const res = await fetch("/api/correct", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: usable[i] }),
+          });
+          if (res.ok) {
+            data = (await res.json()) as CorrectionResponse;
+          } else {
+            throw new Error();
+          }
+        } catch {
+          // Client-side fallback for static showcase hosting (Cloudflare Pages)
+          await new Promise((r) => setTimeout(r, 450));
+          data = correctClientText(usable[i]);
         }
-        const data = (await res.json()) as CorrectionResponse;
+
         correctedParts.push(data.corrected);
         confidenceSum += data.confidence;
       }
